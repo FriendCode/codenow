@@ -2,7 +2,7 @@
     "author": "FriendCode",
     "name": "codebox-io",
     "description": "Command line tool for CodeBox (codebox.io).",
-    "version": "0.3.0",
+    "version": "0.3.1",
     "keywords": [
         "codebox", "dev", "cloud"
     ],

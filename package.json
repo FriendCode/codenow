@@ -13,7 +13,7 @@
         "underscore": "1.4.4",
         "q": "0.9.6",
         "cat-settings": "0.9.1",
-        "request": "2.27.0"
+        "superagent": "0.17.0"
     },
     "engines": {
         "node": ">=0.8.0",

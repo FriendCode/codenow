@@ -19,12 +19,15 @@ var defaultSettings = {
 _.defaults(settings, defaultSettings);
 
 // Return package info for addons
-var getPackage = function(directory) {
-    var git, gitRef, packagePath, packageInfos;
+var getPackage = directory => {
+    var git;
+    var gitRef;
+    var packagePath;
+    var packageInfos;
     packagePath = path.join(directory, "package.json");
-    
+
     // Check directory is a git repository
-    return Q.nfcall(exec, "cd "+directory+" && git config --get remote.origin.url").then(function(output) {
+    return Q.nfcall(exec, "cd "+directory+" && git config --get remote.origin.url").then(output => {
         git = output.join("").replace(/(\r\n|\n|\r)/gm, "");
         
         // Check package.json exists
@@ -33,15 +36,11 @@ var getPackage = function(directory) {
         } else {
             return Q();
         }
-    }).then(function() {
-        // Read current commit
-        return Q.nfcall(exec, "cd "+directory+" && git rev-parse HEAD").then(function(output) {
-            gitRef = output.join("").replace(/(\r\n|\n|\r)/gm, "");
-        });
-    }).then(function() {
-        // Read package.json
-        return Q.nfcall(fs.readFile, packagePath, 'utf8');
-    }).then(function(output) {
+    }).then(() => // Read current commit
+    Q.nfcall(exec, "cd "+directory+" && git rev-parse HEAD").then(output => {
+        gitRef = output.join("").replace(/(\r\n|\n|\r)/gm, "");
+    })).then(() => // Read package.json
+    Q.nfcall(fs.readFile, packagePath, 'utf8')).then(output => {
         packageInfos = JSON.parse(output);
         return Q({
             'git': git+"#"+gitRef,
@@ -55,7 +54,7 @@ var client = new Codebox({
     'token': settings.token,
     'host': settings.host
 });
-client.on("apierror", function(err, body) {
+client.on("apierror", (err, body) => {
     console.log("error: ", body);
 });
 
@@ -63,7 +62,7 @@ client.on("apierror", function(err, body) {
 cli
 .command('whoami')
 .description('display current authentication.')
-.action(function() {
+.action(() => {
     console.log("Client currently use:");
     console.log("\tHost: %s", client.config.host);
     console.log("\tToken: %s", client.config.token);
@@ -73,7 +72,7 @@ cli
 cli
 .command('auth [token]')
 .description('configure authentication.')
-.action(function(token) {
+.action(token => {
     if (!token) {
         console.log("Need token to authenticate: codebox-io -h for more infos");
         return;
@@ -87,7 +86,7 @@ cli
 cli
 .command('host [hostname]')
 .description('configure Codebox host.')
-.action(function(host) {
+.action(host => {
     console.log("Codebox host is:", host);
     settings.host = host;
     settings.saveSync();
@@ -98,7 +97,7 @@ cli
 cli
 .command('reset')
 .description('reset settings.')
-.action(function() {
+.action(() => {
     _.extend(settings, defaultSettings);
     settings.saveSync();
     console.log("Settings have been reset!");
@@ -109,9 +108,9 @@ cli
 cli
 .command('list')
 .description('list boxes.')
-.action(function() {
-    client.boxes().then(function(boxes) {
-        boxes.forEach(function(box) {
+.action(() => {
+    client.boxes().then(boxes => {
+        boxes.forEach(box => {
             console.log(box.name, "|", box.url)
         })
     });
@@ -121,7 +120,7 @@ cli
 cli
 .command('download [id] [output]')
 .description('download a box content.')
-.action(function(boxId, output) {
+.action((boxId, output) => {
     if (!boxId) {
         console.log("Need boxId to download content: codebox-io -h for more infos");
         return;
@@ -131,15 +130,15 @@ cli
         return;
     }
 
-    client.box(boxId).then(function(box) {
+    client.box(boxId).then(box => {
         console.log("Start Downloading %s...", box.name);
         console.log(" In file %s", output);
         return box.content(output);
-    }).then(function() {
+    }).then(() => {
         console.log("\nEnd, content is in %s", output);
-    }, function(err) {
+    }, err => {
         console.log("\nError:", err);
-    }, function(n) {
+    }, n => {
         console.log('\t-> got %d bytes of data', n);
     });
 });
@@ -160,7 +159,7 @@ cli
         'git': this.git,
         'stack': this.stack,
         'description': this.label
-    }).then(function(box) {
+    }).then(box => {
         console.log(box.name, "|", box.url);
     });
 });
@@ -169,13 +168,11 @@ cli
 cli
 .command('publish [directory]')
 .description('Publish an addon.')
-.action(function(directory) {
+.action(directory => {
     directory = path.resolve(directory || "./");
-    getPackage(directory).then(function(packageInfos) {
-        return client.publishAddon(packageInfos);
-    }).then(function(addon) {
+    getPackage(directory).then(packageInfos => client.publishAddon(packageInfos)).then(addon => {
         console.log("published", addon.name, ":", addon["package"]["version"]);
-    }, function(err) {
+    }, err => {
         console.log("error publishing addon:", err);
     })
 });
@@ -184,13 +181,11 @@ cli
 cli
 .command('unpublish [directory]')
 .description('Unpublish an addon.')
-.action(function(directory) {
+.action(directory => {
     directory = path.resolve(directory || "./");
-    getPackage(directory).then(function(packageInfos) {
-        return client.unpublishAddon(packageInfos["package"].name);
-    }).then(function(addon) {
+    getPackage(directory).then(packageInfos => client.unpublishAddon(packageInfos["package"].name)).then(addon => {
         console.log("Unpublished addon from", directory);
-    }, function(err) {
+    }, err => {
         console.log("error publishing addon:", err);
     })
 });
